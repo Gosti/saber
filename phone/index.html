@@ -1,0 +1,46 @@
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<script>
+		if (window.DeviceOrientationEvent) {
+			window.addEventListener("deviceorientation", deviceOrientationListener);
+		} else {
+			alert("Sorry, your browser doesn't support Device Orientation");
+		}
+		var serversocket = new WebSocket("ws://10.12.13.14:8080/echo");
+		serversocket.onopen = function() {
+			serversocket.send("PHONE");
+		}
+
+		serversocket.onmessage = function(e) {
+			//
+		};
+
+		function senddata() {
+			var data = document.getElementById('sendtext').value;
+			serversocket.send(data);
+			document.getElementById('comms').innerHTML += "Sent: " + data + "<br>";
+		}
+
+		function deviceOrientationListener(event) {
+			serversocket.send(JSON.stringify({	"alpha": Math.round(event.alpha),
+												"beta": Math.round(event.beta),
+												"gamma": Math.round(event.gamma)}));
+
+			document.getElementById("alpha").innerText =  Math.round(event.alpha)
+			document.getElementById("beta").innerText = Math.round(event.beta)
+			document.getElementById("gamma").innerText = Math.round(event.gamma)
+		}
+
+	</script>
+</head>
+
+<body>
+	<input id="sendtext" type="text" />
+	<input type="button" id="sendBtn" value="send" onclick="senddata()"></input>
+	<div id='comms'></div>
+	<div>Alpha: <span id="alpha"></span></div>
+	<div>Beta: <span id="beta"></span></div>
+	<div>Gamma: <span id="gamma"></span></div>
+</body>
+</html>
