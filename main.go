@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/websocket"
-	"io/ioutil"
+	"html/template"
+
 	"net/http"
+	"os"
 )
 
 var upgrader = websocket.Upgrader{
@@ -12,12 +14,13 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+type Page struct {
+	IP string
+	ID string
+}
+
 var desktop *websocket.Conn
 var phone *websocket.Conn
-
-func print_binary(s []byte) {
-	fmt.Print(string(s), "\n")
-}
 
 func echoHandler(w http.ResponseWriter, r *http.Request) {
 	var k byte = 0
@@ -31,17 +34,17 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
+
 		if string(p) == "DESKTOP" {
 			fmt.Println("Desktop connected")
-			desktop = conn
-			k = 2
+			hostHandler(conn)
+			return
 		} else if string(p) == "PHONE" {
 			fmt.Println("Phone connected")
 			phone = conn
 			k = 1
 		}
 
-		//print_binary(p)
 		if k == 1 {
 			desktop.WriteMessage(messageType, p)
 		}
@@ -54,23 +57,31 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
+	hostList = make(map[string]*host)
+
 	http.HandleFunc("/echo", echoHandler)
-	host, err := ioutil.ReadFile("./host/index.html")
-	if err != nil {
-		panic(err)
-	}
-	phone, err := ioutil.ReadFile("./phone/index.html")
-	if err != nil {
-		panic(err)
-	}
+	// host, err := ioutil.ReadFile("./host/index.html")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// phone, err := ioutil.ReadFile("./phone/index.html")
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if len(list[r.URL.Path[1:]]) > 0 {
-			// test if game exist
-			fmt.Fprint(w, phone)
+		if r.URL.Path[1:] == "favicon.ico" {
+			return
+		}
+		fmt.Println(r.URL.Path[1:])
+		if len(r.URL.Path[1:]) > 0 {
+			t, _ := template.ParseFiles("./host/index.html")
+			t.Execute(w, &Page{IP: os.Args[1], ID: ""})
 		} else {
-			// generate game
-			fmt.Fprint(w, home)
+
+			t, _ := template.ParseFiles("./host/index.html")
+			t.Execute(w, &Page{IP: os.Args[1]})
 		}
 	})
 
