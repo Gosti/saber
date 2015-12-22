@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/websocket"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -54,7 +55,24 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	http.HandleFunc("/echo", echoHandler)
-	http.Handle("/", http.FileServer(http.Dir("./")))
+	host, err := ioutil.ReadFile("./host/index.html")
+	if err != nil {
+		panic(err)
+	}
+	phone, err := ioutil.ReadFile("./phone/index.html")
+	if err != nil {
+		panic(err)
+	}
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if len(list[r.URL.Path[1:]]) > 0 {
+			// test if game exist
+			fmt.Fprint(w, phone)
+		} else {
+			// generate game
+			fmt.Fprint(w, home)
+		}
+	})
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {

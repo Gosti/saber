@@ -7,7 +7,7 @@
 		} else {
 			alert("Sorry, your browser doesn't support Device Orientation");
 		}
-		var serversocket = new WebSocket("ws://10.12.13.14:8080/echo");
+		var serversocket = new WebSocket("ws://192.168.1.33:8080/echo");
 		serversocket.onopen = function() {
 			serversocket.send("PHONE");
 		}
